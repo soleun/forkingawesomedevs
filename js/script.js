@@ -63,7 +63,7 @@ function init() {
     function fetchGraph(user, repo, root_id, page) {
         var node_idx;
         //if(page > 0) {
-        d3.json("https://api.github.com/repos/" + user + "/" + repo + "/forks?per_page=100&page=" + page, function (data) {
+        d3.json("https://api.github.com/repos/" + user + "/" + repo + "/forks?callback=?&per_page=100&page=" + page, function (data) {
             if (data && data.length > 0) {
                 console.debug(data);
                 $.each(data, function (i, o) {
