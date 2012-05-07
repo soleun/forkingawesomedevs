@@ -5,6 +5,7 @@
 var nodes = [];
 var links = [];
 var nodes_hash = {};
+var max_watchers = 0;
 
 $(document).ready(function () {
     $('div#main').layout({
@@ -37,7 +38,7 @@ function init() {
 
     var force = d3.layout.force().charge(-200).linkDistance(50).size([width, height]);
 
-    function loadGraph(user, repo) {
+    function loadGraph(obj) {
         if (svg) {
             svg.remove();
         }
@@ -48,15 +49,19 @@ function init() {
         }
 
         svg = d3.select("#chart").append("svg").attr("width", width).attr("height", height);
-
-        root = addNode({
-            "name": repo,
-            "type": "project",
-            "x": width / 2,
-            "y": height / 2,
-            "group": 0
-        });
-        fetchGraph(user, repo, root, 1);
+		
+		obj['type'] = "project";
+		obj['x'] = width / 2;
+		obj['y'] = height / 2;
+		obj['group'] = 0;
+		obj['size'] = obj['watchers'];
+		
+		console.debug(obj);
+		
+        root = addNode(obj);
+        
+        console.debug(nodes);
+        fetchGraph(obj['user'], obj['name'], root, 1);
     }
 
     function fetchGraph(user, repo, root_id, page) {
@@ -68,6 +73,8 @@ function init() {
                     node_idx = addNode({
                         "name": o['owner']['login'],
                         "type": "user",
+                        "size": o['watchers'],
+                        "watchers": o['watchers'],
                         "x": width / 2,
                         "y": height / 2,
                         "group": 2
@@ -92,6 +99,9 @@ function init() {
 
     function addNode(o) {
         if (!nodes_hash[o['name']]) {
+        	if(o['type'] == 'user' && o['watchers'] > max_watchers) {
+        		max_watchers = o['watchers'];
+        	}
             nodes.push(o);
             nodes_hash[o['name']] = nodes.length - 1;
         }
@@ -119,7 +129,12 @@ function init() {
             d3.select(this).select("text").style("opacity", 0)
         })
 
-        nodeEnter.append("svg:circle").attr("r", 7).style("fill", function (d) {
+        nodeEnter.append("svg:circle").attr("r", function (d) {
+        	if(d.type == "project") {
+        		return 15;
+        	}
+        	return d.size/max_watchers*10;
+        }).style("fill", function (d) {
             return color(d.group);
         });
 
@@ -150,9 +165,14 @@ function init() {
 
     // Toggle children on click.
     function click(d) {
-        $.getJSON('https://api.github.com/users/' + d.name + '?callback=?', function (p) {
-            $('div.ui-layout-east').html('<img src="' + p['data'].avatar_url + '"/><h2>' + p['data'].login + '</h2>');
-        });
+    	console.debug(d);
+    	if(d.type == "user") {
+    		$.getJSON('https://api.github.com/users/' + d.name + '?callback=?', function (p) {
+	            $('div.ui-layout-east').html('<img src="' + p['data'].avatar_url + '"/><h2>' + p['data'].login + '</h2>');
+	        });	
+    	} else {
+    		$('div.ui-layout-east').html('<h2>' + d.name + '</h2><br/>description : ' + d.description + '<br/>url : <a href="' + d.url + '">' + d.url + '</a>');
+    	}
     }
 
     $('.typeahead').typeahead({
@@ -163,7 +183,11 @@ function init() {
                     result_list.push({
                         "name": o['name'],
                         "user": o['owner'],
-                        "forks": o['forks']
+                        "forks": o['forks'],
+                        "watchers": o['watchers'],
+                        "description": o['description'],
+                        "url": o['url'],
+                        "language": o['language']
                     });
                 });
                 return typeahead.process(result_list);
@@ -174,7 +198,7 @@ function init() {
             if (obj['forks'] > 100) {
                 $('#myModal').modal();
             }
-            loadGraph(obj['user'], obj['name']);
+            loadGraph(obj);
         }
     });
 }
