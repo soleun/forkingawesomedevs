@@ -37,7 +37,6 @@ function init() {
 
     var force = d3.layout.force().charge(-200).linkDistance(50).size([width, height]);
 
-    //loadGraph("jacomyal", "sigma.js");
     function loadGraph(user, repo) {
         if (svg) {
             svg.remove();
@@ -63,10 +62,9 @@ function init() {
     function fetchGraph(user, repo, root_id, page) {
         var node_idx;
         //if(page > 0) {
-        d3.json("https://api.github.com/repos/" + user + "/" + repo + "/forks?callback=?&per_page=100&page=" + page, function (data) {
-            if (data && data.length > 0) {
-                console.debug(data);
-                $.each(data, function (i, o) {
+        $.getJSON("https://api.github.com/repos/" + user + "/" + repo + "/forks?callback=?&per_page=100&page=" + page, function (data) {
+            if (data && data['data'] && data['data'].length > 0) {
+                $.each(data['data'], function (i, o) {
                     node_idx = addNode({
                         "name": o['owner']['login'],
                         "type": "user",
@@ -152,8 +150,8 @@ function init() {
 
     // Toggle children on click.
     function click(d) {
-        $.getJSON('https://api.github.com/users/' + d.name, function (p) {
-            $('div.ui-layout-east').html('<img src="' + p.avatar_url + '"/><h2>' + p.login + '</h2>');
+        $.getJSON('https://api.github.com/users/' + d.name + '?callback=?', function (p) {
+            $('div.ui-layout-east').html('<img src="' + p['data'].avatar_url + '"/><h2>' + p['data'].login + '</h2>');
         });
     }
 
@@ -161,7 +159,6 @@ function init() {
         source: function (typeahead, query) {
             $.getJSON('https://github.com/api/v2/json/repos/search/' + query + '?callback=?', function (data) {
                 var result_list = [];
-                console.debug(data);
                 $.each(data['repositories'], function (i, o) {
                     result_list.push({
                         "name": o['name'],
@@ -176,9 +173,8 @@ function init() {
         onselect: function (obj) {
             if (obj['forks'] > 100) {
                 $('#myModal').modal();
-            } else {
-                loadGraph(obj['user'], obj['name']);
             }
+            loadGraph(obj['user'], obj['name']);
         }
     });
 }
