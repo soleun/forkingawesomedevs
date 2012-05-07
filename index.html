@@ -1,0 +1,119 @@
+<!doctype html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!-- Consider adding a manifest.appcache: h5bp.com/d/Offline -->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+
+    <!-- Use the .htaccess and remove these lines to avoid edge case issues.
+         More info: h5bp.com/i/378 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title></title>
+    <meta name="description" content="">
+
+    <!-- Mobile viewport optimized: h5bp.com/viewport -->
+    <meta name="viewport" content="width=device-width">
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/main.css">
+
+    <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
+
+    <!-- All JavaScript at the bottom, except this Modernizr build.
+         Modernizr enables HTML5 elements & feature detects for optimal performance.
+         Create your own custom Modernizr build: www.modernizr.com/download/ -->
+    <script src="js/libs/modernizr-2.5.3.min.js"></script>
+    <script src="http://mbostock.github.com/d3/d3.v2.js"></script>
+</head>
+<body>
+    <!-- Prompt IE 6 users to install Chrome Frame. Remove this if you support IE 6.
+         chromium.org/developers/how-tos/chrome-frame-getting-started -->
+    <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
+    <header>
+
+    </header>
+    <div role="main" id="main">
+        <div class="ui-layout-center">
+            <div id="chart"></div>
+        </div>
+        <div class="ui-layout-north">
+            <div class="navbar navbar-fixed-top">
+                <div class="navbar-inner">
+                    <div class="container" style="width:100%;padding-left:30px;">
+                        <a class="brand" href="/">Forking Awesome Devs</a>
+                        <!--div class="nav-collapse collapse">
+                            <ul class="nav">
+                                <li class="">
+                                      <form class="navbar-search pull-left">
+                                        <input type="text" class="search-query" placeholder="Search">
+                                    </form>
+                                </li>
+                            </ul>
+                        </div-->
+                    </div>
+                </div>
+              </div>
+              <div style="margin-top:40px;padding:5px 0 5px 30px;height:28px;background-color:#EEE;">
+                <form class="form-inline" onsubmit="return false;" style="margin:0;">
+                    <input type="text" class="input typeahead" placeholder="Search Query" data-provide="typeahead" data-items="4">
+                    <label class="checkbox">
+                        <input type="checkbox" id="append"> Append Result
+                    </label>
+                </form>
+            </div>
+        </div>
+        <div class="ui-layout-south" style="background-color:#EEE;">© 2012 Forking Awesome Devs, Inc. | Special Thanks to Chris</div>
+        <div class="ui-layout-east" style="background-color:#EEE;">Info!</div>
+    </div>
+    <footer>
+
+    </footer>
+    
+    
+    <div class="modal" id="myModal" style="display: none; ">
+        <div class="modal-header">
+            <button class="close" data-dismiss="modal">×</button>
+            <h3>Modal header</h3>
+        </div>
+        <div class="modal-body">
+            <p>One fine body…</p>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn" data-dismiss="modal">Close</a>
+            <a href="#" class="btn btn-primary">Save changes</a>
+        </div>
+    </div>
+    
+    <!-- JavaScript at the bottom for fast page loading -->
+
+    <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if offline -->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js"><\/script>')</script>
+    
+    <script src="js/libs/bootstrap.min.js"></script>
+    <script src="js/libs/bootstrap-typeahead.js"></script>
+    <script src="js/libs/bootstrap-modal.js"></script>
+    <script src="js/libs/jquery.layout-latest.js"></script>
+
+    <!-- scripts concatenated and minified via build script -->
+    <script src="js/plugins.js"></script>
+    <script src="js/script.js"></script>
+    <!-- end scripts -->
+
+    <!-- Asynchronous Google Analytics snippet. Change UA-XXXXX-X to be your site's ID.
+         mathiasbynens.be/notes/async-analytics-snippet -->
+    <script>
+        var _gaq=[['_setAccount','UA-31485706-1'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+</body>
+</html>
