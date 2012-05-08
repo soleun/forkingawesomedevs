@@ -5,6 +5,50 @@
     top: 0;
     left: 0;
 }
+
+#searchbar {
+	margin-top: 40px;
+	padding: 5px 0 5px 30px;
+	height: 28px;
+	background-color: #EEE;
+}
+
+#mainbar {
+	width: 100%;
+	padding-left: 30px;
+}
+
+#east_container {
+	width: 300px;
+	margin-top: 10px;
+}
+
+#right_panel fieldset div.control-group div.controls {
+	padding-top: 5px;
+	margin-left: 100px;
+}
+
+#right_panel fieldset div.control-group label.control-label {
+	width: 80px;
+}
+
+.form-inline {
+	margin: 0;
+}
+
+.ui-layout-north {
+	border-bottom: 1px solid #CCCCCC;
+}
+
+.ui-layout-south {
+	background-color: #EEE;
+	padding: 5px 10px;
+	border-top: 1px solid #CCCCCC;
+}
+
+.ui-layout-east {
+}
+
 circle.node {
     cursor: pointer;
     stroke: #000;

@@ -30,7 +30,7 @@
          Modernizr enables HTML5 elements & feature detects for optimal performance.
          Create your own custom Modernizr build: www.modernizr.com/download/ -->
     <script src="js/libs/modernizr-2.5.3.min.js"></script>
-    <script src="http://mbostock.github.com/d3/d3.v2.js"></script>
+    <script src="js/libs/d3.v2.min.js"></script>
 </head>
 <body>
     <!-- Prompt IE 6 users to install Chrome Frame. Remove this if you support IE 6.
@@ -46,22 +46,24 @@
         <div class="ui-layout-north">
             <div class="navbar navbar-fixed-top">
                 <div class="navbar-inner">
-                    <div class="container" style="width:100%;padding-left:30px;">
+                    <div id="mainbar" class="container">
                         <a class="brand" href="/">Forking Awesome Devs</a>
-                        <!--div class="nav-collapse collapse">
+                        <div class="nav-collapse collapse">
                             <ul class="nav">
                                 <li class="">
-                                      <form class="navbar-search pull-left">
-                                        <input type="text" class="search-query" placeholder="Search">
-                                    </form>
+                                    <a id="aboutBtn">About</a>
                                 </li>
                             </ul>
-                        </div-->
+                        </div>
                     </div>
                 </div>
               </div>
-              <div style="margin-top:40px;padding:5px 0 5px 30px;height:28px;background-color:#EEE;">
-                <form class="form-inline" onsubmit="return false;" style="margin:0;">
+              <div id="searchbar">
+                <form class="form-inline" onsubmit="return false;">
+                	<div class="btn-group" data-toggle="buttons-radio" style="display:inline">
+	                    <button class="btn active">Project</button>
+	                    <button class="btn">User</button>
+                    </div>
                     <input type="text" class="input typeahead" placeholder="Search Query" data-provide="typeahead" data-items="4">
                     <label class="checkbox">
                         <input type="checkbox" id="append"> Append Result
@@ -69,15 +71,32 @@
                 </form>
             </div>
         </div>
-        <div class="ui-layout-south" style="background-color:#EEE;">© 2012 Forking Awesome Devs | Special Thanks to Chris</div>
-        <div class="ui-layout-east" style="background-color:#EEE;">Info!</div>
+        <div class="ui-layout-south">© 2012 forkingawesomedevs.com | Created by <a href="http://twitter.com/soleun" target="_blank">Sol Eun</a>. Special Thanks to <a href="http://twitter.com/bestfriendchris" target="_blank">Chris Turner</a> for an awesome domain name suggestion.</div>
+        <div class="ui-layout-east">
+        	<div id="east_container" class="well">
+				<h2>Welcome!</h2>
+			</div>
+		</div>
     </div>
     <footer>
 
     </footer>
     
     
-    <div class="modal" id="myModal" style="display: none; ">
+    <div class="modal fade" id="aboutModal" style="display: none; ">
+        <div class="modal-header">
+            <button class="close" data-dismiss="modal">×</button>
+            <h3>What is Forking Awesome Devs?</h3>
+        </div>
+        <div class="modal-body">
+            <p>Message</p>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn" data-dismiss="modal">Continue</a>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="warningModal" style="display: none; ">
         <div class="modal-header">
             <button class="close" data-dismiss="modal">×</button>
             <h3>Warning!</h3>
@@ -99,6 +118,7 @@
     <script src="js/libs/bootstrap.min.js"></script>
     <script src="js/libs/bootstrap-typeahead.js"></script>
     <script src="js/libs/bootstrap-modal.js"></script>
+    <script src="js/libs/bootstrap-button.js"></script>
     <script src="js/libs/jquery.layout-latest.js"></script>
 
     <!-- scripts concatenated and minified via build script -->

@@ -19,21 +19,28 @@ $(document).ready(function () {
         north__resisable: false,
         north__slidable: false,
         north__spacing_open: 0,
-        north__size: 74,
+        north__size: 79,
         south__closable: false,
         south__resisable: false,
         south__slidable: false,
         south__spacing_open: 0,
         south__size: 30
     });
+    
     init();
+    
+    $("#aboutBtn").click(function() {
+		$('#aboutModal').modal('show');
+	});
+	
+	$("#east_container").css("height", $('div#main').layout().state.center.innerHeight-60);
 });
 
 function init() {
     var width = $('div#main').layout().state.center.innerWidth,
         height = $('div#main').layout().state.center.innerHeight,
         root, svg;
-
+        
     var color = d3.scale.category20();
 
     var force = d3.layout.force().charge(-200).linkDistance(50).size([width, height]);
@@ -46,6 +53,7 @@ function init() {
             nodes = [];
             links = [];
             nodes_hash = {};
+            max_watchers = 0;
         }
 
         svg = d3.select("#chart").append("svg").attr("width", width).attr("height", height);
@@ -56,11 +64,8 @@ function init() {
 		obj['group'] = 0;
 		obj['size'] = obj['watchers'];
 		
-		console.debug(obj);
-		
         root = addNode(obj);
         
-        console.debug(nodes);
         fetchGraph(obj['user'], obj['name'], root, 1);
     }
 
@@ -133,7 +138,7 @@ function init() {
         	if(d.type == "project") {
         		return 15;
         	}
-        	return d.size/max_watchers*10;
+        	return d.size/max_watchers*10+4;
         }).style("fill", function (d) {
             return color(d.group);
         });
@@ -165,13 +170,12 @@ function init() {
 
     // Toggle children on click.
     function click(d) {
-    	console.debug(d);
     	if(d.type == "user") {
     		$.getJSON('https://api.github.com/users/' + d.name + '?callback=?', function (p) {
-	            $('div.ui-layout-east').html('<img src="' + p['data'].avatar_url + '"/><h2>' + p['data'].login + '</h2>');
+	            $('div#east_container').html('<h2><img width="48" height ="48" src="' + p['data'].avatar_url + '"/> <span>' + p['data'].login + '</span></h2><br/><form id="right_panel" class="form-horizontal"><fieldset><div class="control-group"><label class="control-label">URL</label><div class="controls">'+ p['data'].blog +'</div></div></fieldset></form>');
 	        });	
     	} else {
-    		$('div.ui-layout-east').html('<h2>' + d.name + '</h2><br/>description : ' + d.description + '<br/>url : <a href="' + d.url + '">' + d.url + '</a>');
+    		$('div#east_container').html('<h2>' + d.name + '</h2><br/>description : ' + d.description + '<br/>url : <a href="' + d.url + '">' + d.url + '</a>');
     	}
     }
 
@@ -196,7 +200,7 @@ function init() {
         property: "name",
         onselect: function (obj) {
             if (obj['forks'] > 100) {
-                $('#myModal').modal();
+                $('#warningModal').modal();
             }
             loadGraph(obj);
         }
