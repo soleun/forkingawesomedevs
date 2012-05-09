@@ -5,7 +5,12 @@
 var nodes = [];
 var links = [];
 var nodes_hash = {};
+var selected_node;
+var node_original_color;
 var max_watchers = 0;
+var force;
+var color;
+var width, height, root, svg;
 
 $(document).ready(function () {
     $('div#main').layout({
@@ -14,7 +19,7 @@ $(document).ready(function () {
         east__resisable: false,
         east__slidable: false,
         east__spacing_open: 0,
-        east__size: 350,
+        east__size: 400,
         north__closable: false,
         north__resisable: false,
         north__slidable: false,
@@ -27,36 +32,54 @@ $(document).ready(function () {
         south__size: 30
     });
     
-    init();
+    $(document).keypress(function(event){
+		var keycode = (event.keyCode ? event.keyCode : event.which);
+		if(keycode == '13'){
+			hideModals();
+		}
+	});
     
     $("#aboutBtn").click(function() {
 		$('#aboutModal').modal('show');
 	});
 	
+	$("#cleargraph").click(function() {
+		clearGraph();
+	});
+	
 	$("#east_container").css("height", $('div#main').layout().state.center.innerHeight-60);
-});
-
-function init() {
-    var width = $('div#main').layout().state.center.innerWidth,
-        height = $('div#main').layout().state.center.innerHeight,
-        root, svg;
+	
+	function hideModals() {
+		$('#aboutModal').modal('hide');
+		$('#warningModal').modal('hide');
+	}
+	
+	
+	width = $('div#main').layout().state.center.innerWidth;
+    height = $('div#main').layout().state.center.innerHeight;
         
-    var color = d3.scale.category20();
+    svg = d3.select("#chart").append("svg").attr("width", width).attr("height", height);
+    
+    color = d3.scale.category20();
 
-    var force = d3.layout.force().charge(-200).linkDistance(50).size([width, height]);
+    force = d3.layout.force().charge(-200).linkDistance(50).size([width, height]);
+    
+    function clearSVG() {
+    	svg.selectAll("line").remove();
+	    svg.selectAll("g").remove();
+    }
+    
+    function clearGraph() {
+    	nodes = [];
+        links = [];
+        nodes_hash = {};
+        max_watchers = 0;
+        
+        clearSVG();
+    }
 
     function loadGraph(obj) {
-        if (svg) {
-            svg.remove();
-        }
-        if (!$("#append").prop("checked")) {
-            nodes = [];
-            links = [];
-            nodes_hash = {};
-            max_watchers = 0;
-        }
-
-        svg = d3.select("#chart").append("svg").attr("width", width).attr("height", height);
+        clearSVG();
 		
 		obj['type'] = "project";
 		obj['x'] = width / 2;
@@ -72,7 +95,7 @@ function init() {
     function fetchGraph(user, repo, root_id, page) {
         var node_idx;
         //if(page > 0) {
-        $.getJSON("https://api.github.com/repos/" + user + "/" + repo + "/forks?callback=?&per_page=100&page=" + page, function (data) {
+        $.getJSON("https://api.github.com/repos/" + user + "/" + repo + "/forks?callback=?&sort=watchers&per_page=100&page=" + page, function (data) {
             if (data && data['data'] && data['data'].length > 0) {
                 $.each(data['data'], function (i, o) {
                     node_idx = addNode({
@@ -140,7 +163,11 @@ function init() {
         	}
         	return d.size/max_watchers*10+4;
         }).style("fill", function (d) {
-            return color(d.group);
+        	if(d.type == "project") {
+        		return "#1f77b4";
+        	} else {
+        		return "#aec7e8";
+        	}
         });
 
         nodeEnter.append("svg:text").style("pointer-events", "none").style("opacity", 0).style("z-index", 100000).attr("fill", "#555").attr("font-size", "11px").attr("dx", "8").attr("dy", ".35em").text(function (d) {
@@ -162,7 +189,7 @@ function init() {
                 return d.target.y;
             });
 
-            nodeEnter.attr("transform", function (d) {
+            node.attr("transform", function (d) {
                 return "translate(" + d.x + "," + d.y + ")";
             });
         });
@@ -170,13 +197,106 @@ function init() {
 
     // Toggle children on click.
     function click(d) {
+    	if(selected_node && d3.select(this).select("circle") != selected_node) {
+    		selected_node.style("fill", node_original_color);
+    	}
+    	selected_node = d3.select(this).select("circle");
+		node_original_color = selected_node.style("fill");
+		selected_node.style("fill", "#d62728");	
+    	
     	if(d.type == "user") {
     		$.getJSON('https://api.github.com/users/' + d.name + '?callback=?', function (p) {
-	            $('div#east_container').html('<h2><img width="48" height ="48" src="' + p['data'].avatar_url + '"/> <span>' + p['data'].login + '</span></h2><br/><form id="right_panel" class="form-horizontal"><fieldset><div class="control-group"><label class="control-label">URL</label><div class="controls">'+ p['data'].blog +'</div></div></fieldset></form>');
+	            $('div#east_container').html(loadUserTemplate(p));
 	        });	
     	} else {
-    		$('div#east_container').html('<h2>' + d.name + '</h2><br/>description : ' + d.description + '<br/>url : <a href="' + d.url + '">' + d.url + '</a>');
+    		$('div#east_container').html(loadProjectTemplate(d));
     	}
+    }
+    
+    function loadProjectTemplate(d) {
+    	var returnString = '\
+    	<h2>\
+    		<span>' + d.name + '</span>\
+    	</h2>\
+    	<br/>\
+    	<form id="right_panel" class="form-horizontal">\
+    		<fieldset>';
+    	
+    	if(d.language) {
+    		returnString += '<div class="control-group"><label class="control-label">Language</label><div class="controls">'+ d.language +'</div></div>';
+    	}
+    	
+    	returnString += '<div class="control-group"><label class="control-label">GitHub URL</label><div class="controls"><a href="'+d.url+'" target="_blank">'+ d.url +'</a></div></div>';
+    	
+    	if(d.forks) {
+    		returnString += '<div class="control-group"><label class="control-label">Forks</label><div class="controls">'+ d.forks +'</div></div>';
+    	}
+    	if(d.watchers) {
+    		returnString += '<div class="control-group"><label class="control-label">Watchers</label><div class="controls">'+ d.watchers +'</div></div>';
+    	}
+    	if(d.open_issues) {
+    		returnString += '<div class="control-group"><label class="control-label">Open Issues</label><div class="controls">'+ d.open_issues +'</div></div>';
+    	}
+    	if(d.description) {
+    		returnString += '<div class="control-group"><label class="control-label">Description</label><div class="controls">'+ d.description +'</div></div>';
+    	}
+    	
+    	returnString +=	'</fieldset>\
+    	</form>';
+    	
+    	return returnString;
+    }
+    
+    function loadUserTemplate(p) {
+    	var returnString = '\
+    	<h2>\
+    		<img width="48" height ="48" src="' + p['data'].avatar_url + '"/> \
+    		<span>' + p['data'].login + '</span>\
+    	</h2>\
+    	<br/>\
+    	<form id="right_panel" class="form-horizontal">\
+    		<fieldset>';
+    	
+    	returnString += '<div class="control-group"><label class="control-label">Hireable?</label><div class="controls">';
+    	if(p['data'].hireable != null) {
+	    	if(p['data'].hireable == true) {
+	    		returnString += '<button class="btn btn-mini btn-success disabled">Hireable!</button>';
+	    	} else {
+	    		returnString += '<button class="btn btn-mini btn-danger disabled">Not Hireable</button>';
+	    	}
+	    } else {
+	    	returnString += '<button class="btn btn-mini disabled">Unknown</button>';
+	    }
+	    returnString += '</div></div>';
+    	
+    	if(p['data'].company) {
+    		returnString += '<div class="control-group"><label class="control-label">Company</label><div class="controls">'+ p['data'].company +'</div></div>';
+    	}
+    	if(p['data'].location) {
+    		returnString += '<div class="control-group"><label class="control-label">Location</label><div class="controls">'+ p['data'].location +'</div></div>';
+    	}
+    	
+    	returnString += '<div class="control-group"><label class="control-label">GitHub URL</label><div class="controls"><a href="'+p['data'].html_url+'" target="_blank">'+ p['data'].html_url +'</a></div></div>';
+    	
+    	if(p['data'].blog) {
+    		returnString += '<div class="control-group"><label class="control-label">Website</label><div class="controls"><a href="'+p['data'].blog+'" target="_blank">'+ p['data'].blog +'</a></div></div>';
+    	}
+    	if(p['data'].followers) {
+    		returnString += '<div class="control-group"><label class="control-label">Followers</label><div class="controls">'+ p['data'].followers +'</div></div>';
+    	}
+    	if(p['data'].following) {
+    		returnString += '<div class="control-group"><label class="control-label">Following</label><div class="controls">'+ p['data'].following +'</div></div>';
+    	}
+    	if(p['data'].public_gists) {
+    		returnString += '<div class="control-group"><label class="control-label">Public Gists</label><div class="controls">'+ p['data'].public_gists +'</div></div>';
+    	}
+    	if(p['data'].bio) {
+    		returnString += '<div class="control-group"><label class="control-label">Bio</label><div class="controls">'+ p['data'].bio +'</div></div>';
+    	}
+    	
+    	returnString +=	'</fieldset></form>';
+    	
+    	return returnString;
     }
 
     $('.typeahead').typeahead({
@@ -185,6 +305,7 @@ function init() {
                 var result_list = [];
                 $.each(data['repositories'], function (i, o) {
                     result_list.push({
+                    	"user_repo": o['owner']+"/"+o['name'],
                         "name": o['name'],
                         "user": o['owner'],
                         "forks": o['forks'],
@@ -205,4 +326,4 @@ function init() {
             loadGraph(obj);
         }
     });
-}
+});

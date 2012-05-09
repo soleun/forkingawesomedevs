@@ -60,15 +60,15 @@
               </div>
               <div id="searchbar">
                  <form class="form-inline" onsubmit="return false;">
-                	<div id="user_project" class="btn-group" data-toggle="buttons-radio">
-	                    <button class="btn active">Project</button>
+                	<!--div id="user_project" class="btn-group" data-toggle="buttons-radio">
+	                    <button class="btn active">Search Project</button>
 	                    <button class="btn">User</button>
-                    </div>
+                    </div-->
                     <div id="searchinput">
-                        <input type="text" class="input typeahead" placeholder="Search Query" data-provide="typeahead" data-items="4">
-                        <label class="checkbox">
-                            <input type="checkbox" id="append"> Append Result
-                        </label>
+                    	<div class="input-prepend">
+							<span class="add-on"><i class="icon-search"></i> Search Project</span><input id="searchform" type="text" class="typeahead" placeholder="Type a GitHub Project Name" data-provide="typeahead" data-items="4">
+						</div>
+                        <button id="cleargraph" class="btn btn-danger" href="#">Clear Graph</button>
                     </div>
                 </form>
             </div>
@@ -77,6 +77,9 @@
         <div class="ui-layout-east">
         	<div id="east_container" class="well">
 				<h2>Welcome!</h2>
+				<br/>
+				<h3>Get started by searching your favorite GitHub project!</h3>
+				<h4 class="example">e.g. bootstrap</h4>
 			</div>
 		</div>
     </div>
@@ -88,10 +91,30 @@
     <div class="modal fade" id="aboutModal" style="display: none; ">
         <div class="modal-header">
             <button class="close" data-dismiss="modal">×</button>
-            <h3>What is Forking Awesome Devs?</h3>
+            <h3>About Forking Awesome Devs</h3>
         </div>
         <div class="modal-body">
-            <p>Message</p>
+			<h4>What is it</h4>
+			<p>Forking Awesome Devs is a graph-based visual GitHub browser.</p>
+			<h4>How to use</h4>
+			<p>Try searching your favorite GitHub project such as <b>"bootstrap"</b>.<br/>You can add multiple projects simply by doing multiple searches.</p>
+			<h4>Limitation</h4>
+			<p>Currently if the project has more than 100 forks, the app only displays first 100 forks sorted by watchers.</p>
+			<h4>To Do</h4>
+			<ul>
+				<li>Search for user</li>
+				<li>Better navigation</li>
+			</ul>
+			<h4>Credits</h4>
+			<ul>
+				<li>D3.js - <a href="http://d3js.org/" target="_blank">http://d3js.org/</a></li>
+				<li>HTML5 Boilerplate - <a href="http://html5boilerplate.com/" target="_blank">http://html5boilerplate.com/</a></li>
+				<li>Twitter Bootstrap - <a href="http://twitter.github.com/bootstrap/index.html" target="_blank">http://twitter.github.com/bootstrap/index.html</a></li>
+				<li>jQuery - <a href="http://jquery.com/" target="_blank">http://jquery.com/</a></li>
+				
+			</ul>
+			<h4>About author</h4>
+			<p>My name is Sol Eun. I am currently working at <a href="http://quid.com/" target="_blank">Quid Inc.</a> in San Francisco.<br/>You can contact me by email - soleun(at)gmail.com</p>
         </div>
         <div class="modal-footer">
             <a href="#" class="btn" data-dismiss="modal">Continue</a>
@@ -104,7 +127,7 @@
             <h3>Warning!</h3>
         </div>
         <div class="modal-body">
-            <p>Forking Awesome Devs currently doesn't fully support projects with more than 100 forks.<br/>It will load first 100 users who forked the project.</p>
+            <p>Project you searched has more than 100 forks.<br/>It will load top 100 forks sorted by watchers.</p>
         </div>
         <div class="modal-footer">
             <a href="#" class="btn" data-dismiss="modal">Continue</a>

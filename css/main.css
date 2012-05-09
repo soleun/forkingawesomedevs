@@ -1,3 +1,7 @@
+h4.example {
+	color: #BBB;
+}
+
 #main {
     position: absolute;
     width: 100%;
@@ -19,7 +23,7 @@
 }
 
 #east_container {
-	width: 300px;
+	width: 350px;
 	margin-top: 10px;
 }
 
@@ -30,6 +34,7 @@
 
 #right_panel fieldset div.control-group label.control-label {
 	width: 80px;
+	color: #BBB;
 }
 
 #user_project {
@@ -39,7 +44,14 @@
 
 #searchinput {
 	float: left;
-	padding-left: 5px;
+}
+
+#searchform {
+	vertical-align: middle;
+	-webkit-border-radius: 0 3px 3px 0;
+	-moz-border-radius: 0 3px 3px 0;
+	border-radius: 0 3px 3px 0;
+	margin-top: 0;
 }
 
 .form-inline {
@@ -57,6 +69,10 @@
 }
 
 .ui-layout-east {
+}
+
+.form-horizontal .control-group {
+	margin-bottom: 0px;
 }
 
 circle.node {
