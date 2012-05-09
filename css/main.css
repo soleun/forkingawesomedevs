@@ -32,6 +32,16 @@
 	width: 80px;
 }
 
+#user_project {
+	display: inline;
+	float: left;
+}
+
+#searchinput {
+	float: left;
+	padding-left: 5px;
+}
+
 .form-inline {
 	margin: 0;
 }
