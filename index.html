@@ -59,15 +59,17 @@
                 </div>
               </div>
               <div id="searchbar">
-                <form class="form-inline" onsubmit="return false;">
-                	<div class="btn-group" data-toggle="buttons-radio" style="display:inline">
+                 <form class="form-inline" onsubmit="return false;">
+                	<div id="user_project" class="btn-group" data-toggle="buttons-radio">
 	                    <button class="btn active">Project</button>
 	                    <button class="btn">User</button>
                     </div>
-                    <input type="text" class="input typeahead" placeholder="Search Query" data-provide="typeahead" data-items="4">
-                    <label class="checkbox">
-                        <input type="checkbox" id="append"> Append Result
-                    </label>
+                    <div id="searchinput">
+                        <input type="text" class="input typeahead" placeholder="Search Query" data-provide="typeahead" data-items="4">
+                        <label class="checkbox">
+                            <input type="checkbox" id="append"> Append Result
+                        </label>
+                    </div>
                 </form>
             </div>
         </div>
