@@ -37,13 +37,6 @@ $(document).ready(function () {
         south__spacing_open: 0,
         south__size: 30
     });
-    
-    /*$(document).keypress(function(event){
-		var keycode = (event.keyCode ? event.keyCode : event.which);
-		if(keycode == '13'){
-			hideModals();
-		}
-	});*/
 
     $.urlParam = function(name){
         var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -72,11 +65,6 @@ $(document).ready(function () {
 	});
 	
 	$("#east_container").css("height", $('div#main').layout().state.center.innerHeight-60);
-	
-	function hideModals() {
-		$('#aboutModal').modal('hide');
-		$('#warningModal').modal('hide');
-	}
 
     function addSearchHash(q) {
         if(search_hash[q] == null) {
@@ -117,7 +105,7 @@ $(document).ready(function () {
 		search_result = "";
 		selected_node = null;
 		node_original_color = null;
-		        
+		
         clearSVG();
     }
 
@@ -546,7 +534,6 @@ $(document).ready(function () {
         onselect: function (obj) {
             if (obj['forks'] > 100) {
                 $('#warningModal').modal();
-                $('#warningModal > .modal-footer > a').focus();
             }
             addSearchHash("p:"+obj['user']+":"+obj['name']);
             loadProjectGraph(obj);
