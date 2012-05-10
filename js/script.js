@@ -5,11 +5,18 @@
 var nodes = [];
 var links = [];
 var nodes_hash = {};
+var links_hash = {};
 var selected_node;
 var node_original_color;
-var max_watchers = 0;
+var max_p_size = 0;
+var max_u_size = 0;
+var nodes_index = 0;
+var links_index = 0;
 var force;
 var color;
+var default_repos = [];
+var search_hash = {};
+var search_result;
 var width, height, root, svg;
 
 $(document).ready(function () {
@@ -32,16 +39,27 @@ $(document).ready(function () {
         south__size: 30
     });
     
-    $(document).keypress(function(event){
+    /*$(document).keypress(function(event){
 		var keycode = (event.keyCode ? event.keyCode : event.which);
 		if(keycode == '13'){
 			hideModals();
 		}
-	});
+	});*/
+
+    $.urlParam = function(name){
+        var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        return results[1] || 0;
+    }
     
     $("#aboutBtn").click(function() {
 		$('#aboutModal').modal('show');
 	});
+
+    $("#getstaticurl").click(function() {
+        var url = window.location.protocol+"//"+window.location.hostname+window.location.pathname+"?defaults="+search_result;
+        $('#urlholder').html('<textarea class="input-xlarge" id="textarea" rows="3" style="width:500px;">'+url+'</textarea>')
+        $('#urlModal').modal('show');
+    });
 	
 	$("#cleargraph").click(function() {
 		clearGraph();
@@ -53,6 +71,18 @@ $(document).ready(function () {
 		$('#aboutModal').modal('hide');
 		$('#warningModal').modal('hide');
 	}
+
+    function addSearchHash(q) {
+        console.debug(q);
+        if(search_hash[q] == null) {
+            search_hash[q] = 1;
+            if(search_result == null) {
+                search_result = q;
+            } else {
+                search_result += ","+q;
+            }
+        }
+    }
 	
 	
 	width = $('div#main').layout().state.center.innerWidth;
@@ -62,7 +92,7 @@ $(document).ready(function () {
     
     color = d3.scale.category20();
 
-    force = d3.layout.force().charge(-200).linkDistance(50).size([width, height]);
+    force = d3.layout.force().charge(-100).linkDistance(30).size([width, height]);
     
     function clearSVG() {
     	svg.selectAll("line").remove();
@@ -73,45 +103,90 @@ $(document).ready(function () {
     	nodes = [];
         links = [];
         nodes_hash = {};
-        max_watchers = 0;
+        max_size = 0;
         
         clearSVG();
     }
 
-    function loadGraph(obj) {
+    function loadProjectGraph(obj) {
         clearSVG();
 		
 		obj['type'] = "project";
 		obj['x'] = width / 2;
 		obj['y'] = height / 2;
 		obj['group'] = 0;
+        obj['search'] = true;
 		obj['size'] = obj['watchers'];
 		
         root = addNode(obj);
+
+        user_node_idx = addNode({
+            "full_name": obj['user'],
+            "name": obj['user'],
+            "type": "user",
+            "search": false,
+            "size": 10,
+            "x": width / 2,
+            "y": height / 2,
+            "group": 3
+        });
+        addLink(root, user_node_idx, 1);
         
-        fetchGraph(obj['user'], obj['name'], root, 1);
+        fetchProject(obj['user'], obj['name'], root, 1);
     }
 
-    function fetchGraph(user, repo, root_id, page) {
-        var node_idx;
+    function loadUserGraph(user) {
+        clearSVG();
+
+        root = addNode({
+            "full_name": user,
+            "name": user,
+            "type": "user",
+            "search": true,
+            "size": 10,
+            "x": width / 2,
+            "y": height / 2,
+            "group": 3
+        });
+        
+        $.getJSON('https://api.github.com/users/' + user + '?callback=?', function (p) {
+            $('div#east_container').html(loadUserTemplate(p));
+        });
+        fetchUser(user, root, 1);
+    }
+
+    function fetchProject(user, repo, root_id, page) {
+        var fork_node_idx, user_node_idx;
         //if(page > 0) {
         $.getJSON("https://api.github.com/repos/" + user + "/" + repo + "/forks?callback=?&sort=watchers&per_page=100&page=" + page, function (data) {
             if (data && data['data'] && data['data'].length > 0) {
                 $.each(data['data'], function (i, o) {
-                    node_idx = addNode({
+
+                    o["full_name"] = o['owner']['login']+"/"+o['name'];
+                    o["type"] = "project";
+                    o["search"] = false;
+                    o["size"] = o['forks'];
+                    o["url"] = o['html_url'];
+                    o["x"] = width / 2;
+                    o["y"] = height / 2;
+                    o["group"] = 2;
+
+                    // Fork node
+                    fork_node_idx = addNode(o);
+                    addLink(root_id, fork_node_idx, 1);
+
+                    // User node
+                    user_node_idx = addNode({
+                        "full_name": o['owner']['login'],
                         "name": o['owner']['login'],
                         "type": "user",
-                        "size": o['watchers'],
-                        "watchers": o['watchers'],
+                        "search": false,
+                        "size": 10,
                         "x": width / 2,
                         "y": height / 2,
-                        "group": 2
+                        "group": 3
                     });
-                    links.push({
-                        "source": root_id,
-                        "target": node_idx,
-                        "value": 1
-                    });
+                    addLink(fork_node_idx, user_node_idx, 1);
                 });
                 /*
                  * Loading only the first page for now.
@@ -125,19 +200,70 @@ $(document).ready(function () {
         //}
     }
 
-    function addNode(o) {
-        if (!nodes_hash[o['name']]) {
-        	if(o['type'] == 'user' && o['watchers'] > max_watchers) {
-        		max_watchers = o['watchers'];
-        	}
-            nodes.push(o);
-            nodes_hash[o['name']] = nodes.length - 1;
-        }
-        return nodes_hash[o['name']];
+    function fetchUser(user, root_id, page) {
+        var fork_node_idx, user_node_idx;
+        //if(page > 0) {
+        $.getJSON("https://api.github.com/users/" + user + "/repos?callback=?&per_page=100&page=" + page, function (data) {
+            if (data && data['data'] && data['data'].length > 0) {
+                $.each(data['data'], function (i, o) {
+
+                    o["full_name"] = user+"/"+o['name'];
+                    o["type"] = "project";
+                    o["search"] = false;
+                    o["size"] = o['forks'];
+                    o["url"] = o['html_url'];
+                    o["x"] = width / 2;
+                    o["y"] = height / 2;
+                    o["group"] = 2;
+
+                    // Fork node
+                    fork_node_idx = addNode(o);
+                    addLink(root_id, fork_node_idx, 1);
+                });
+                /*
+                 * Loading only the first page for now.
+                 */
+                //    fetchGraph(user, repo, root_id, ++page);
+                //} else {
+                //  update();
+            }
+            update();
+        });
+        //}
     }
 
-    function getNodeIdx() {
-        if (!nodes_hash[name]) {
+    function addNode(o) {
+        if (nodes_hash[o['full_name']] == null) {
+            if(!o['search']) {
+                if(o['type'] == "project" && o['size'] > max_p_size) {
+                    max_p_size = o['size'];
+                }
+                if(o['type'] == "user" && o['size'] > max_u_size) {
+                    max_u_size = o['size'];
+                }
+            }
+            nodes.push(o);
+            nodes_hash[o['full_name']] = nodes_index;
+            nodes_index++;
+        }
+
+        return nodes_hash[o['full_name']];
+    }
+
+    function addLink(source, target, value) {
+        if (links_hash[source+"_"+target] == null) {
+            links.push({
+                "source": source,
+                "target": target,
+                "value": value
+            })
+            links_hash[source+"_"+target] = links_index;
+            links_index++;
+        }
+    }
+
+    function getNodeIdx(name) {
+        if (nodes_hash[name] == null) {
             return -1;
         }
         return nodes_hash[name];
@@ -146,37 +272,66 @@ $(document).ready(function () {
     function update() {
         force.nodes(nodes).links(links).start();
 
-        var link = svg.selectAll("line.link").data(links).enter().append("line").attr("class", "link").style("stroke-width", function (d) {
+        var link = svg.selectAll("line.link").data(links);
+        link.enter().insert("svg:line", "g.node").attr("class", "link").style("stroke-width", function (d) {
             return Math.sqrt(d.value);
         });
 
+        link.exit().remove();
+
         var node = svg.selectAll("g.node").data(nodes)
-        var nodeEnter = node.enter().append("svg:g").attr("class", "node").call(force.drag).on("click", click).on("mouseover.circle", function () {
+        var nodeEnter = node.enter().append("svg:g").attr("class", "node").call(force.drag).on("dblclick", doubleclickNode).on("click", clickNode).on("mouseover.circle", function () {
             d3.select(this).select("text").style("opacity", 1)
-        }).on("mouseout.circle", function () {
-            d3.select(this).select("text").style("opacity", 0)
+        }).on("mouseout.circle", function (d) {
+            if(!d.search) {
+                d3.select(this).select("text").style("opacity", 0)
+            }
         })
 
         nodeEnter.append("svg:circle").attr("r", function (d) {
-        	if(d.type == "project") {
+        	if(d.search) {
         		return 15;
         	}
-        	return d.size/max_watchers*10+4;
+            if(d.type == "project") {
+                if(d.size/max_p_size > 0) {
+                    return d.size/max_p_size*10+4;
+                }
+                return 5;
+            } else {
+                return 7;
+            }
+        	
         }).style("fill", function (d) {
         	if(d.type == "project") {
-        		return "#1f77b4";
+                if(d.search) {
+                    return "#1f77b4";
+                } else {
+                    return "#aec7e8";
+                }
         	} else {
-        		return "#aec7e8";
+                if(d.search) {
+                    return "#2ca02c";
+                } else {
+                    return "#98df8a";
+                }
         	}
         });
 
-        nodeEnter.append("svg:text").style("pointer-events", "none").style("opacity", 0).style("z-index", 100000).attr("fill", "#555").attr("font-size", "11px").attr("dx", "8").attr("dy", ".35em").text(function (d) {
-            return d.name;
+        nodeEnter.append("svg:text").style("pointer-events", "none").style("z-index", 100000).attr("fill", "#555").attr("font-size", "11px").attr("dx", "8").attr("dy", ".35em").text(function (d) {
+            return d.full_name;
+        }).style("opacity", function(d) {
+            if(!d.search) {
+                return 0;
+            } else {
+                return 1;
+            }
         });
 
         nodeEnter.append("svg:title").style("pointer-events", "none").text(function (d) {
-            return d.name;
+            return d.full_name;
         });
+
+        node.exit().remove();
 
         force.on("tick", function () {
             link.attr("x1", function (d) {
@@ -195,28 +350,52 @@ $(document).ready(function () {
         });
     }
 
-    // Toggle children on click.
-    function click(d) {
+    function clickNode(d, i) {
     	if(selected_node && d3.select(this).select("circle") != selected_node) {
     		selected_node.style("fill", node_original_color);
     	}
     	selected_node = d3.select(this).select("circle");
-		node_original_color = selected_node.style("fill");
-		selected_node.style("fill", "#d62728");	
+        node_original_color = selected_node.style("fill");
+		selected_node.style("fill", "#d62728");
     	
     	if(d.type == "user") {
     		$.getJSON('https://api.github.com/users/' + d.name + '?callback=?', function (p) {
 	            $('div#east_container').html(loadUserTemplate(p));
-	        });	
+	        });
     	} else {
     		$('div#east_container').html(loadProjectTemplate(d));
     	}
+    }
+
+    function doubleclickNode(d, i) {
+        if(selected_node && d3.select(this).select("circle") != selected_node) {
+            selected_node.style("fill", node_original_color);
+        }
+        selected_node = d3.select(this).select("circle");
+        selected_node.attr("r", 15);
+        selected_node.style("fill", "#d62728"); 
+
+        nodes[nodes_hash[d.full_name]]["search"] = true;
+        
+        if(d.type == "user") {
+            $.getJSON('https://api.github.com/users/' + d.name + '?callback=?', function (p) {
+                $('div#east_container').html(loadUserTemplate(p));
+            });
+            node_original_color = "#2ca02c";
+            addSearchHash("u:"+d.name);
+            fetchUser(d.name, i, 1);
+        } else {
+            $('div#east_container').html(loadProjectTemplate(d));
+            node_original_color = "#1f77b4";
+            addSearchHash("p:"+d['owner']['login']+":"+d.name);
+            fetchProject(d['owner']['login'], d.name, i, 1);
+        }
     }
     
     function loadProjectTemplate(d) {
     	var returnString = '\
     	<h2>\
-    		<span>' + d.name + '</span>\
+    		<span>' + d.full_name + '</span>\
     	</h2>\
     	<br/>\
     	<form id="right_panel" class="form-horizontal">\
@@ -299,13 +478,48 @@ $(document).ready(function () {
     	return returnString;
     }
 
+    function fetchRepo(user, repo) {
+        $.getJSON("https://api.github.com/repos/" + user + "/" + repo + "?callback=?", function (data) {
+            if (data && data['data']) {
+                var o = data['data'];
+                if (o['forks'] > 100) {
+                    $('#warningModal').modal();
+                }
+                loadProjectGraph({
+                    "full_name": o['owner']['login']+"/"+o['name'],
+                    "name": o['name'],
+                    "user": o['owner']['login'],
+                    "forks": o['forks'],
+                    "watchers": o['watchers'],
+                    "description": o['description'],
+                    "url": o['html_url'],
+                    "language": o['language']
+                });
+            }
+        });
+    }
+
+    if($.urlParam("defaults")) {
+        default_repos = $.urlParam("defaults").split(",");
+
+        $.each(default_repos, function (i, o) {
+            var details = o.split(":");
+            if(details[0] == "p") {
+                fetchRepo(details[1], details[2]);
+            } else {
+                loadUserGraph(details[1]);
+            }
+            addSearchHash(o);
+        });
+    }
+
     $('.typeahead').typeahead({
         source: function (typeahead, query) {
             $.getJSON('https://github.com/api/v2/json/repos/search/' + query + '?callback=?', function (data) {
                 var result_list = [];
                 $.each(data['repositories'], function (i, o) {
                     result_list.push({
-                    	"user_repo": o['owner']+"/"+o['name'],
+                        "full_name": o['owner']+"/"+o['name'],
                         "name": o['name'],
                         "user": o['owner'],
                         "forks": o['forks'],
@@ -323,7 +537,7 @@ $(document).ready(function () {
             if (obj['forks'] > 100) {
                 $('#warningModal').modal();
             }
-            loadGraph(obj);
+            loadProjectGraph(obj);
         }
     });
 });
