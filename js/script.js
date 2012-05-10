@@ -16,7 +16,7 @@ var force;
 var color;
 var default_repos = [];
 var search_hash = {};
-var search_result;
+var search_result = "";
 var width, height, root, svg;
 
 $(document).ready(function () {
@@ -48,7 +48,10 @@ $(document).ready(function () {
 
     $.urlParam = function(name){
         var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
-        return results[1] || 0;
+        if(results) {
+        	return results[1];
+        }
+        return 0;
     }
     
     $("#aboutBtn").click(function() {
@@ -56,7 +59,11 @@ $(document).ready(function () {
 	});
 
     $("#getstaticurl").click(function() {
-        var url = window.location.protocol+"//"+window.location.hostname+window.location.pathname+"?defaults="+search_result;
+    	var url = window.location.protocol+"//"+window.location.hostname+window.location.pathname;
+    	if(search_result != "") {
+    		url += "?defaults="+search_result;
+    	}
+        
         $('#urlholder').html('<textarea class="input-xlarge" id="textarea" rows="3" style="width:500px;">'+url+'</textarea>')
         $('#urlModal').modal('show');
     });
@@ -76,7 +83,7 @@ $(document).ready(function () {
         console.debug(q);
         if(search_hash[q] == null) {
             search_hash[q] = 1;
-            if(search_result == null) {
+            if(search_result == "") {
                 search_result = q;
             } else {
                 search_result += ","+q;
@@ -149,9 +156,6 @@ $(document).ready(function () {
             "group": 3
         });
         
-        $.getJSON('https://api.github.com/users/' + user + '?callback=?', function (p) {
-            $('div#east_container').html(loadUserTemplate(p));
-        });
         fetchUser(user, root, 1);
     }
 
@@ -537,6 +541,7 @@ $(document).ready(function () {
             if (obj['forks'] > 100) {
                 $('#warningModal').modal();
             }
+            addSearchHash("p:"+obj['user']+":"+obj['name']);
             loadProjectGraph(obj);
         }
     });
