@@ -79,7 +79,6 @@ $(document).ready(function () {
 	}
 
     function addSearchHash(q) {
-        console.debug(q);
         if(search_hash[q] == null) {
             search_hash[q] = 1;
             if(search_result == "") {
