@@ -14,7 +14,6 @@ var nodes_index = 0;
 var links_index = 0;
 var force;
 var color;
-var default_repos = [];
 var search_hash = {};
 var search_result = "";
 var width, height, root, svg;
@@ -110,8 +109,16 @@ $(document).ready(function () {
     	nodes = [];
         links = [];
         nodes_hash = {};
-        max_size = 0;
-        
+        links_hash = {};
+        max_p_size = 0;
+        max_u_size = 0;
+        nodes_index = 0;
+		links_index = 0;
+        search_hash = {};
+		search_result = "";
+		selected_node = null;
+		node_original_color = null;
+		        
         clearSVG();
     }
 
@@ -540,6 +547,7 @@ $(document).ready(function () {
         onselect: function (obj) {
             if (obj['forks'] > 100) {
                 $('#warningModal').modal();
+                $('#warningModal > .modal-footer > a').focus();
             }
             addSearchHash("p:"+obj['user']+":"+obj['name']);
             loadProjectGraph(obj);
